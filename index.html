@@ -7,12 +7,14 @@
     <title>Vite App</title>
   </head>
   <body>
-    <div>
-      <div id="liveView" class="relative">
+    <div class="flex flex-col h-[100dvh]">
+      <header>header</header>
+      <div id="liveView" class="relative grow">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas" class="absolute left-0 top-0"></canvas>
       </div>
       <p id="output"></p>
+      <footer>footer</footer>
     </div>
     <script type="module" src="/main.js"></script>
   </body>

@@ -36,7 +36,7 @@ function hasGetUserMedia() {
 }
 
 if (hasGetUserMedia()) {
-  enableCam();
+  // enableCam();
 }
 
 function enableCam() {
@@ -58,6 +58,11 @@ function enableCam() {
   });
 }
 
+/**
+ * mirror mode
+ * video -> <video class="rotate-y-[180]"> // 비디오의 경우 트렌스폼으로 좌우변경
+ * canvas -> context.scale(-1, 1) // 캔버스의 경우는 그림을 좌우변경
+ */
 let lastVideoTime = -1;
 let results = undefined;
 async function predictWebcam() {
@@ -72,7 +77,6 @@ async function predictWebcam() {
   ctx.save();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const drawingUtils = new DrawingUtils(ctx);
-  // drawingUtils.drawLandmarks({ radius: 2 });
 
   canvas.style.height = videoHeight;
   video.style.height = videoHeight;
