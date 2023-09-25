@@ -26,9 +26,29 @@ const video = document.querySelector("#video");
 const canvas = document.querySelector("#canvas");
 const ctx = canvas.getContext("2d");
 const gestureOutput = document.querySelector("#output");
-const videoHeight = `360px`;
-const videoWidth = `480px`;
+const activeMirrorMode = document.querySelector("#activeMirrorMode");
+let isMirrorMode = true;
 let webcamRunning = false;
+
+activeMirrorMode.addEventListener("change", (e) => {
+  isMirrorMode = e.target.checked;
+
+  if (isMirrorMode) {
+    onMirrorMode();
+  } else {
+    offMirrorMode();
+  }
+});
+
+const onMirrorMode = () => {
+  video.style.transform = "rotateY(180deg)";
+  canvas.style.transform = "rotateY(180deg)";
+};
+
+const offMirrorMode = () => {
+  video.removeAttribute("style");
+  canvas.removeAttribute("style");
+};
 
 // Check if webcam access is supported.
 function hasGetUserMedia() {
@@ -36,7 +56,8 @@ function hasGetUserMedia() {
 }
 
 if (hasGetUserMedia()) {
-  // enableCam();
+  onMirrorMode();
+  enableCam();
 }
 
 function enableCam() {
@@ -78,11 +99,6 @@ async function predictWebcam() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const drawingUtils = new DrawingUtils(ctx);
 
-  canvas.style.height = videoHeight;
-  video.style.height = videoHeight;
-  canvas.style.width = videoWidth;
-  video.style.width = videoWidth;
-
   if (results.landmarks) {
     for (const landmarks of results.landmarks) {
       drawingUtils.drawConnectors(
@@ -96,14 +112,13 @@ async function predictWebcam() {
       drawingUtils.drawLandmarks(landmarks, {
         color: "#FF0000",
         lineWidth: 1,
-        radius: 3,
+        radius: 1,
       });
     }
   }
   ctx.restore();
   if (results.gestures.length > 0) {
     gestureOutput.style.display = "block";
-    gestureOutput.style.width = videoWidth;
     const categoryName = results.gestures[0][0].categoryName;
     const categoryScore = parseFloat(
       results.gestures[0][0].score * 100

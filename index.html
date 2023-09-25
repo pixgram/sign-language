@@ -7,13 +7,56 @@
     <title>Vite App</title>
   </head>
   <body>
-    <div class="flex flex-col h-[100dvh]">
+    <div class="flex flex-col h-[100dvh] p-4 bg-slate-900 text-white">
       <header>header</header>
-      <div id="liveView" class="relative grow">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="canvas" class="absolute left-0 top-0"></canvas>
+      <div class="flex flex-col grow">
+        <div class="flex justify-center p-8">
+          <div class="p-8 bg-slate-800/25 border border-white/5 rounded-xl">
+            <div id="liveView" class="relative max-w-3xl rounded-xl">
+              <video
+                id="video"
+                class="transform w-full rounded-xl overflow-auto"
+                autoplay
+                playsinline
+              ></video>
+              <canvas
+                id="canvas"
+                class="transform absolute top-0 left-0 z-10 w-full h-full"
+              ></canvas>
+              <div class="absolute bottom-0 left-0 bg-black/50">
+                <h3>debug</h3>
+                <p id="output"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex-1 mt-4 px-8">
+          <div class="flex items-center">
+            <input
+              checked
+              id="activeMirrorMode"
+              type="checkbox"
+              value=""
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded"
+            />
+            <label
+              for="activeMirrorMode"
+              class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+              >active mirror mode</label
+            >
+          </div>
+          <div class="mt-4 p-4 bg-cyan-700/10 rounded-xl border border-white/5">
+            <h3 class="text-lg font-bold">DETECTED TEXT</h3>
+            <p class="m-2 h-8 bg-neutral-700/5 py-2" id="detectedText"></p>
+          </div>
+          <div
+            class="mt-4 p-4 bg-yellow-700/10 rounded-xl border border-white/5"
+          >
+            <h3 class="text-lg font-bold">TRANSLATED TEXT</h3>
+            <p class="m-2 h-8 bg-yellow-700/5 py-2" id="translatedText"></p>
+          </div>
+        </div>
       </div>
-      <p id="output"></p>
       <footer>footer</footer>
     </div>
     <script type="module" src="/main.js"></script>
