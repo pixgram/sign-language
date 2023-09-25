@@ -27,6 +27,8 @@ const canvas = document.querySelector("#canvas");
 const ctx = canvas.getContext("2d");
 const gestureOutput = document.querySelector("#output");
 const activeMirrorMode = document.querySelector("#activeMirrorMode");
+const detectedText = document.querySelector("#detectedText");
+const translatedText = document.querySelector("#translatedText");
 let isMirrorMode = true;
 let webcamRunning = false;
 
@@ -79,15 +81,10 @@ function enableCam() {
   });
 }
 
-/**
- * mirror mode
- * video -> <video class="rotate-y-[180]"> // 비디오의 경우 트렌스폼으로 좌우변경
- * canvas -> context.scale(-1, 1) // 캔버스의 경우는 그림을 좌우변경
- */
 let lastVideoTime = -1;
 let results = undefined;
+let lastCategoryName = "";
 async function predictWebcam() {
-  const webcamElement = document.getElementById("webcam");
   let nowInMs = Date.now();
 
   if (video.currentTime !== lastVideoTime) {
@@ -116,7 +113,9 @@ async function predictWebcam() {
       });
     }
   }
+
   ctx.restore();
+
   if (results.gestures.length > 0) {
     gestureOutput.style.display = "block";
     const categoryName = results.gestures[0][0].categoryName;
@@ -124,6 +123,13 @@ async function predictWebcam() {
       results.gestures[0][0].score * 100
     ).toFixed(2);
     const handedness = results.handednesses[0][0].displayName;
+
+    if (categoryName !== "None" && categoryName !== lastCategoryName) {
+      translateToText(categoryName);
+      lastCategoryName = categoryName;
+    }
+
+    // debug panel
     gestureOutput.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}`;
   } else {
     gestureOutput.style.display = "none";
@@ -132,4 +138,8 @@ async function predictWebcam() {
   if (webcamRunning === true) {
     window.requestAnimationFrame(predictWebcam);
   }
+}
+
+function translateToText(word) {
+  detectedText.innerText = `${word}`;
 }
