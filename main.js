@@ -125,7 +125,7 @@ async function predictWebcam() {
     const handedness = results.handednesses[0][0].displayName;
 
     if (categoryName !== "None" && categoryName !== lastCategoryName) {
-      translateToText(categoryName);
+      signToText(categoryName);
       lastCategoryName = categoryName;
     }
 
@@ -140,6 +140,6 @@ async function predictWebcam() {
   }
 }
 
-function translateToText(word) {
+function signToText(word) {
   detectedText.innerText = `${word}`;
 }
