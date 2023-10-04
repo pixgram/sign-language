@@ -15,6 +15,11 @@
     "vite": "^4.4.5"
   },
   "dependencies": {
-    "@mediapipe/tasks-vision": "^0.10.5"
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/control_utils": "^0.6.1675466023",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/holistic": "^0.5.1675471629",
+    "@mediapipe/tasks-vision": "^0.10.5",
+    "device-detector-js": "^3.0.3"
   }
 }
