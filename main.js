@@ -3,8 +3,16 @@ import DeviceDetector from "device-detector-js";
 import {
   Holistic,
   POSE_CONNECTIONS,
-  FACEMESH_TESSELATION,
   HAND_CONNECTIONS,
+  POSE_LANDMARKS_LEFT,
+  POSE_LANDMARKS_RIGHT,
+  FACEMESH_TESSELATION,
+  FACEMESH_RIGHT_EYE,
+  FACEMESH_RIGHT_EYEBROW,
+  FACEMESH_LEFT_EYE,
+  FACEMESH_LEFT_EYEBROW,
+  FACEMESH_FACE_OVAL,
+  FACEMESH_LIPS,
 } from "@mediapipe/holistic";
 import { drawConnectors, drawLandmarks, lerp } from "@mediapipe/drawing_utils";
 import { Camera } from "@mediapipe/camera_utils";
@@ -20,78 +28,103 @@ let isMirrorMode = true;
 let webcamRunning = false;
 
 function onResults(results) {
-  const radiusLerp = (data) => {
-    return lerp(data.from.z, 3, 0.7, 10, 1);
-  };
+  document.body.classList.add("loaded");
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  // canvasCtx.drawImage(
-  //   results.segmentationMask,
-  //   0,
-  //   0,
-  //   canvasElement.width,
-  //   canvasElement.height
-  // );
 
-  // Only overwrite existing pixels.
-  canvasCtx.globalCompositeOperation = "source-in";
-  canvasCtx.fillStyle = "#00FF00";
-  canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
-
-  // Only overwrite missing pixels.
-  canvasCtx.globalCompositeOperation = "destination-atop";
-  // canvasCtx.drawImage(
-  //   results.image,
-  //   0,
-  //   0,
-  //   canvasElement.width,
-  //   canvasElement.height
-  // );
-
-  canvasCtx.globalCompositeOperation = "source-over";
+  canvasCtx.lineWidth = 5;
+  // Pose...
   drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
-    color: "#00FF00",
+    color: "white",
     lineWidth: 1,
-    radius: (data) => {
-      return radiusLerp(data);
-    },
   });
-  drawLandmarks(canvasCtx, results.poseLandmarks, {
-    color: "#FF0000",
-    lineWidth: 1,
-    radius: (data) => {
-      return radiusLerp(data);
-    },
-  });
+  drawLandmarks(
+    canvasCtx,
+    Object.values(POSE_LANDMARKS_LEFT).map(
+      (index) => results.poseLandmarks[index]
+    ),
+    {
+      visibilityMin: 0.65,
+      color: "white",
+      fillColor: "rgb(255,138,0)",
+      lineWidth: 1,
+      radius: (data) => {
+        return lerp(data.from.z, -0.15, 0.1, 4, 1);
+      },
+    }
+  );
+  drawLandmarks(
+    canvasCtx,
+    Object.values(POSE_LANDMARKS_RIGHT).map(
+      (index) => results.poseLandmarks[index]
+    ),
+    {
+      visibilityMin: 0.65,
+      color: "white",
+      fillColor: "rgb(0,217,231)",
+      lineWidth: 1,
+      radius: (data) => {
+        return lerp(data.from.z, -0.15, 0.1, 4, 1);
+      },
+    }
+  );
 
-  drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_TESSELATION, {
-    color: "#C0C0C070",
-    lineWidth: 0.5,
-  });
-
-  drawConnectors(canvasCtx, results.leftHandLandmarks, HAND_CONNECTIONS, {
-    color: "#00CC00",
-    lineWidth: 2,
-  });
-  drawLandmarks(canvasCtx, results.leftHandLandmarks, {
-    color: "#FF0000",
-    lineWidth: 2,
-    radius: (data) => {
-      return radiusLerp(data);
-    },
-  });
-
+  // Hands...
   drawConnectors(canvasCtx, results.rightHandLandmarks, HAND_CONNECTIONS, {
-    color: "#00CC00",
-    lineWidth: 2,
+    lineWidth: 1,
+    color: "white",
   });
   drawLandmarks(canvasCtx, results.rightHandLandmarks, {
-    color: "#FF0000",
+    color: "white",
+    fillColor: "rgb(0,217,231)",
     lineWidth: 2,
     radius: (data) => {
-      return radiusLerp(data);
+      return lerp(data.from.z, -0.15, 0.1, 4, 1);
     },
   });
+  drawConnectors(canvasCtx, results.leftHandLandmarks, HAND_CONNECTIONS, {
+    lineWidth: 1,
+    color: "white",
+  });
+  drawLandmarks(canvasCtx, results.leftHandLandmarks, {
+    color: "white",
+    fillColor: "rgb(255,138,0)",
+    lineWidth: 2,
+    radius: (data) => {
+      return lerp(data.from.z, -0.15, 0.1, 4, 1);
+    },
+  });
+
+  // Face...
+  drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_TESSELATION, {
+    color: "#C0C0C070",
+    lineWidth: 1,
+  });
+  drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_RIGHT_EYE, {
+    color: "rgb(0,217,231)",
+    lineWidth: 1,
+  });
+  drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_RIGHT_EYEBROW, {
+    color: "rgb(0,217,231)",
+    lineWidth: 1,
+  });
+  drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_LEFT_EYE, {
+    color: "rgb(255,138,0)",
+    lineWidth: 1,
+  });
+  drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_LEFT_EYEBROW, {
+    color: "rgb(255,138,0)",
+    lineWidth: 1,
+  });
+  drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_FACE_OVAL, {
+    color: "#E0E0E0",
+    lineWidth: 1,
+  });
+  drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_LIPS, {
+    color: "#E0E0E0",
+    lineWidth: 1,
+  });
+
   canvasCtx.restore();
 }
 
@@ -105,9 +138,8 @@ holistic.setOptions({
   // selfieMode: true,
   modelComplexity: 1,
   smoothLandmarks: true,
-  enableSegmentation: true,
+  enableSegmentation: false,
   smoothSegmentation: true,
-  refineFaceLandmarks: true,
   minDetectionConfidence: 0.5,
   minTrackingConfidence: 0.5,
 });
@@ -117,8 +149,9 @@ const camera = new Camera(videoElement, {
   onFrame: async () => {
     await holistic.send({ image: videoElement });
   },
-  width: videoElement.width,
-  height: videoElement.height,
+  onResults: () => {},
+  width: 300,
+  height: 300,
 });
 
 camera.start();
