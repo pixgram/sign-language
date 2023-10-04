@@ -49,7 +49,7 @@ function onResults(results) {
       fillColor: "rgb(255,138,0)",
       lineWidth: 1,
       radius: (data) => {
-        return lerp(data.from.z, -0.15, 0.1, 4, 1);
+        return lerp(data.from.z, -0.15, 0.1, 2, 1);
       },
     }
   );
@@ -64,7 +64,7 @@ function onResults(results) {
       fillColor: "rgb(0,217,231)",
       lineWidth: 1,
       radius: (data) => {
-        return lerp(data.from.z, -0.15, 0.1, 4, 1);
+        return lerp(data.from.z, -0.15, 0.1, 2, 1);
       },
     }
   );
@@ -102,19 +102,19 @@ function onResults(results) {
   });
   drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_RIGHT_EYE, {
     color: "rgb(0,217,231)",
-    lineWidth: 1,
+    lineWidth: 0.7,
   });
   drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_RIGHT_EYEBROW, {
     color: "rgb(0,217,231)",
-    lineWidth: 1,
+    lineWidth: 0.7,
   });
   drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_LEFT_EYE, {
     color: "rgb(255,138,0)",
-    lineWidth: 1,
+    lineWidth: 0.7,
   });
   drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_LEFT_EYEBROW, {
     color: "rgb(255,138,0)",
-    lineWidth: 1,
+    lineWidth: 0.7,
   });
   drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_FACE_OVAL, {
     color: "#E0E0E0",
