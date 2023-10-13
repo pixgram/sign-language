@@ -28,11 +28,103 @@ let isMirrorMode = true;
 let webcamRunning = false;
 
 function onResults(results) {
+  // const data = tf.tensor2d([processedLandmarks]);
+
   document.body.classList.add("loaded");
+
+  if (
+    results.leftHandLandmarks?.length > 0 ||
+    results.rightHandLandmarks?.length > 0
+  ) {
+    // console.log(results);
+  }
+
+  // draw
+  drawHolisticLandmarks(results);
+}
+
+function dtwDistance(sequence1, sequence2) {
+  // Create a distance matrix.
+  const distanceMatrix = [[]];
+
+  // Initialize the distance matrix.
+  for (let i = 0; i < sequence1.length; i++) {
+    distanceMatrix[i] = [[]];
+    for (let j = 0; j < sequence2.length; j++) {
+      distanceMatrix[i][j] = Infinity;
+    }
+  }
+
+  // Calculate the distance matrix.
+  distanceMatrix[0][0] = 0;
+  for (let i = 1; i < sequence1.length; i++) {
+    distanceMatrix[i][0] =
+      distanceMatrix[i - 1][0] + Math.abs(sequence1[i] - sequence2[0]);
+  }
+  for (let j = 1; j < sequence2.length; j++) {
+    distanceMatrix[0][j] =
+      distanceMatrix[0][j - 1] + Math.abs(sequence1[0] - sequence2[j]);
+  }
+
+  for (let i = 1; i < sequence1.length; i++) {
+    for (let j = 1; j < sequence2.length; j++) {
+      distanceMatrix[i][j] = Math.min(
+        distanceMatrix[i - 1][j] + Math.abs(sequence1[i] - sequence2[j]),
+        distanceMatrix[i][j - 1] + Math.abs(sequence1[i] - sequence2[j]),
+        distanceMatrix[i - 1][j - 1] + Math.abs(sequence1[i] - sequence2[j])
+      );
+    }
+  }
+
+  // Return the distance between the last two points in the sequences.
+  return distanceMatrix[sequence1.length - 1][sequence2.length - 1];
+}
+
+function createFeatureVectorFromLandmarks(landmarks) {
+  // Extract the positions of the landmarks.
+  const positions = landmarks.map((landmark) => landmark.position);
+
+  // Calculate the distances between the landmarks.
+  const distances = [];
+  for (let i = 0; i < positions.length; i++) {
+    for (let j = i + 1; j < positions.length; j++) {
+      distances.push(
+        Math.sqrt(
+          Math.pow(positions[i].x - positions[j].x, 2) +
+            Math.pow(positions[i].y - positions[j].y, 2)
+        )
+      );
+    }
+  }
+
+  // Calculate the angles between the landmarks.
+  const angles = [];
+  for (let i = 0; i < positions.length; i++) {
+    for (let j = i + 1; j < positions.length; j++) {
+      angles.push(
+        Math.atan2(
+          positions[j].y - positions[i].y,
+          positions[j].x - positions[i].x
+        )
+      );
+    }
+  }
+
+  // Return the feature vector.
+  return [...positions, ...distances, ...angles];
+}
+
+function drawHolisticLandmarks(results) {
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-  canvasCtx.lineWidth = 5;
+  canvasCtx.drawImage(
+    results.image,
+    0,
+    0,
+    canvasElement.width,
+    canvasElement.height
+  );
   // Pose...
   drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
     color: "white",
@@ -135,7 +227,7 @@ const holistic = new Holistic({
 });
 
 holistic.setOptions({
-  // selfieMode: true,
+  selfieMode: true,
   modelComplexity: 1,
   smoothLandmarks: true,
   enableSegmentation: false,
@@ -143,150 +235,15 @@ holistic.setOptions({
   minDetectionConfidence: 0.5,
   minTrackingConfidence: 0.5,
 });
+
 holistic.onResults(onResults);
 
 const camera = new Camera(videoElement, {
   onFrame: async () => {
+    canvasElement.width = videoElement.getBoundingClientRect().width;
+    canvasElement.height = videoElement.getBoundingClientRect().height;
     await holistic.send({ image: videoElement });
   },
-  onResults: () => {},
-  width: 300,
-  height: 300,
 });
 
 camera.start();
-
-// import {
-//   GestureRecognizer,
-//   FilesetResolver,
-//   DrawingUtils,
-// } from "@mediapipe/tasks-vision";
-
-// let gestureRecognizer = null;
-// const runningMode = "VIDEO";
-
-// const createGestureRecognizer = async () => {
-//   const vision = await FilesetResolver.forVisionTasks("wasm");
-
-//   gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
-//     baseOptions: {
-//       modelAssetPath: "/data/models/gesture_recognizer.task",
-//       delegate: "GPU",
-//     },
-//     runningMode: runningMode,
-//     numHands: 2,
-//   });
-// };
-// createGestureRecognizer();
-
-// activeMirrorMode.addEventListener("change", (e) => {
-//   isMirrorMode = e.target.checked;
-
-//   if (isMirrorMode) {
-//     onMirrorMode();
-//   } else {
-//     offMirrorMode();
-//   }
-// });
-
-// const onMirrorMode = () => {
-//   video.style.transform = "rotateY(180deg)";
-//   canvas.style.transform = "rotateY(180deg)";
-// };
-
-// const offMirrorMode = () => {
-//   video.removeAttribute("style");
-//   canvas.removeAttribute("style");
-// };
-
-// // Check if webcam access is supported.
-// function hasGetUserMedia() {
-//   return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-// }
-
-// if (hasGetUserMedia()) {
-//   onMirrorMode();
-//   enableCam();
-// }
-
-// function enableCam() {
-//   if (webcamRunning === true) {
-//     webcamRunning = false;
-//   } else {
-//     webcamRunning = true;
-//   }
-
-//   // getUsermedia parameters.
-//   const constraints = {
-//     video: true,
-//   };
-
-//   // Activate the webcam stream.
-//   navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-//     video.srcObject = stream;
-//     video.addEventListener("loadeddata", predictWebcam);
-//   });
-// }
-
-// let lastVideoTime = -1;
-// let results = undefined;
-// let lastCategoryName = "";
-// async function predictWebcam() {
-//   let nowInMs = Date.now();
-
-//   if (video.currentTime !== lastVideoTime) {
-//     lastVideoTime = video.currentTime;
-//     results = gestureRecognizer.recognizeForVideo(video, nowInMs);
-//   }
-
-//   ctx.save();
-//   ctx.clearRect(0, 0, canvas.width, canvas.height);
-//   const drawingUtils = new DrawingUtils(ctx);
-
-//   if (results.landmarks) {
-//     for (const landmarks of results.landmarks) {
-//       drawingUtils.drawConnectors(
-//         landmarks,
-//         GestureRecognizer.HAND_CONNECTIONS,
-//         {
-//           color: "#00FF00",
-//           lineWidth: 1,
-//         }
-//       );
-//       drawingUtils.drawLandmarks(landmarks, {
-//         color: "#FF0000",
-//         lineWidth: 1,
-//         radius: 1,
-//       });
-//     }
-//   }
-
-//   ctx.restore();
-
-//   if (results.gestures.length > 0) {
-//     gestureOutput.style.display = "block";
-//     const categoryName = results.gestures[0][0].categoryName;
-//     const categoryScore = parseFloat(
-//       results.gestures[0][0].score * 100
-//     ).toFixed(2);
-//     const handedness = results.handednesses[0][0].displayName;
-
-//     if (categoryName !== "None" && categoryName !== lastCategoryName) {
-//       signToText(categoryName);
-//       lastCategoryName = categoryName;
-//     }
-
-//     // debug panel
-//     gestureOutput.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}`;
-//   } else {
-//     gestureOutput.style.display = "none";
-//   }
-//   // Call this function again to keep predicting when the browser is ready.
-//   if (webcamRunning === true) {
-//     window.requestAnimationFrame(predictWebcam);
-//   }
-// }
-
-// function signToText(word) {
-//   detectedText.innerText = `${word}`;
-// }
