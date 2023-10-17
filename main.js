@@ -1,5 +1,4 @@
 import "./style.css";
-import DeviceDetector from "device-detector-js";
 import {
   Holistic,
   POSE_CONNECTIONS,
@@ -16,6 +15,7 @@ import {
 } from "@mediapipe/holistic";
 import { drawConnectors, drawLandmarks, lerp } from "@mediapipe/drawing_utils";
 import { Camera } from "@mediapipe/camera_utils";
+import { io } from 'socket.io-client'
 
 const videoElement = document.querySelector("#video");
 const canvasElement = document.querySelector("#canvas");
@@ -26,6 +26,19 @@ const detectedText = document.querySelector("#detectedText");
 const translatedText = document.querySelector("#translatedText");
 let isMirrorMode = true;
 let webcamRunning = false;
+let landmarkXYZ = [];
+let landmarkPushIdx = 0
+const passLandmarkToServerUnit = 50;
+const SERVER_URL = 'http://127.0.0.1:5050'
+
+const socket = io(SERVER_URL)
+socket.on('connect', () => {
+  console.log(socket.connected)
+})
+
+socket.on('detect', (res) => {
+  console.log('detect', res)
+})
 
 function onResults(results) {
   // const data = tf.tensor2d([processedLandmarks]);
@@ -36,8 +49,18 @@ function onResults(results) {
     results.leftHandLandmarks?.length > 0 ||
     results.rightHandLandmarks?.length > 0
   ) {
-    // console.log(results);
+    // landmarkXYZ.push({leftHandLandmarks: results.leftHandLandmarks, rightHandLandmarks: results.rightHandLandmarks})
+
+    socket.emit('landmark', {data: results})
+   // if(landmarkPushIdx % passLandmarkToServerUnit === 0) {
+   //    // console.log(landmarkXYZ)
+   //    socket.emit('landmark', {data: landmarkXYZ})
+   //    landmarkXYZ = [];
+   //  }
   }
+
+
+  landmarkPushIdx += 1;
 
   // draw
   drawHolisticLandmarks(results);
