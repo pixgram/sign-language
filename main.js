@@ -26,9 +26,6 @@ const detectedText = document.querySelector("#detectedText");
 const translatedText = document.querySelector("#translatedText");
 let isMirrorMode = true;
 let webcamRunning = false;
-let landmarkXYZ = [];
-let landmarkPushIdx = 0
-const passLandmarkToServerUnit = 50;
 const SERVER_URL = 'http://127.0.0.1:5050'
 
 const socket = io(SERVER_URL)
@@ -49,18 +46,10 @@ function onResults(results) {
     results.leftHandLandmarks?.length > 0 ||
     results.rightHandLandmarks?.length > 0
   ) {
-    // landmarkXYZ.push({leftHandLandmarks: results.leftHandLandmarks, rightHandLandmarks: results.rightHandLandmarks})
-
-    socket.emit('landmark', {data: results})
-   // if(landmarkPushIdx % passLandmarkToServerUnit === 0) {
-   //    // console.log(landmarkXYZ)
-   //    socket.emit('landmark', {data: landmarkXYZ})
-   //    landmarkXYZ = [];
-   //  }
+    // console.log(results)
+    const multiHandLandmarks = {leftHandLandmarks: results.leftHandLandmarks, rightHandLandmarks: results.rightHandLandmarks}
+    socket.emit('landmark', multiHandLandmarks)
   }
-
-
-  landmarkPushIdx += 1;
 
   // draw
   drawHolisticLandmarks(results);
