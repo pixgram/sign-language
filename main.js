@@ -26,11 +26,12 @@ const detectedText = document.querySelector("#detectedText");
 const translatedText = document.querySelector("#translatedText");
 let isMirrorMode = true;
 let webcamRunning = false;
+let lastWord = '';
 const SERVER_URL = 'http://127.0.0.1:5050'
 
 const socket = io(SERVER_URL)
 socket.on('connect', () => {
-  console.log(socket.connected)
+  console.log(socket.connected, 'server is run')
 })
 
 socket.on('detect', (res) => {
@@ -38,19 +39,40 @@ socket.on('detect', (res) => {
 })
 
 function showDetectText(res) {
-  detectedText.innerText = res
+  if(res !== lastWord) {
+    detectedText.innerText = res
+  }
+  // speak(res, {lang: 'en'})
+  // speak('안녕하세요')
 }
 
-function onResults(results) {
-  // const data = tf.tensor2d([processedLandmarks]);
+function speak(text, opt) {
+  if(typeof SpeechSynthesisUtterance === 'undefined' || typeof window.speechSynthesis === 'undefined') {
+    alert('이 브라우져는 음성 합성을 지원하지 않습니다.');
+    return
+  }
 
+  window.speechSynthesis.cancel(); // 현재 읽고 있다면 초기화
+
+  const prop = opt || {};
+
+  const speechMsg = new SpeechSynthesisUtterance()
+  speechMsg.rate = prop.rate || 1; //속도 0.1 ~ 10
+  speechMsg.pitch = prop.pitch || 1; // 음높이 0 ~ 2
+  speechMsg.lang = prop.lang || 'ko-KR';
+  speechMsg.text = text;
+
+  window.speechSynthesis.speak(speechMsg);
+}
+
+
+function onResults(results) {
   document.body.classList.add("loaded");
 
   if (
     results.leftHandLandmarks?.length > 0 ||
     results.rightHandLandmarks?.length > 0
   ) {
-    // console.log(results)
     const multiHandLandmarks = {leftHandLandmarks: results.leftHandLandmarks, rightHandLandmarks: results.rightHandLandmarks}
     socket.emit('landmark', multiHandLandmarks)
   }
