@@ -216,4 +216,11 @@ const camera = new Camera(videoElement, {
   },
 });
 
-camera.start();
+navigator.mediaDevices.getUserMedia({video: true})
+    .then(stream => {
+      camera.start();
+    })
+    .catch(e => {
+      console.error('비디오 스트림을 가져오는 동안 오류 발생: ', e)
+    })
+
