@@ -73,8 +73,9 @@ function onResults(results) {
     results.leftHandLandmarks?.length > 0 ||
     results.rightHandLandmarks?.length > 0
   ) {
+    // socket.emit('landmark', results) // 얼굴, 포즈, 핸즈의 결과값을 모두 보내기
     const multiHandLandmarks = {leftHandLandmarks: results.leftHandLandmarks, rightHandLandmarks: results.rightHandLandmarks}
-    socket.emit('landmark', multiHandLandmarks)
+    socket.emit('landmark', multiHandLandmarks) // 손의 결과값만 보내기(테스트용)
   }
 
   // draw
