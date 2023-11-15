@@ -28,6 +28,7 @@ let isMirrorMode = true;
 let webcamRunning = false;
 let lastWord = '';
 const SERVER_URL = 'http://127.0.0.1:5050'
+const cameraSelect = document.querySelector("#cameraSelect");
 
 const socket = io(SERVER_URL)
 socket.on('connect', () => {
@@ -191,7 +192,7 @@ function drawHolisticLandmarks(results) {
   canvasCtx.restore();
 }
 
-const holistic = new Holistic({
+let holistic = new Holistic({
   locateFile: (file) => {
     return `/node_modules/@mediapipe/holistic/${file}`;
   },
@@ -209,17 +210,84 @@ holistic.setOptions({
 
 holistic.onResults(onResults);
 
-const camera = new Camera(videoElement, {
+let camera = new Camera(videoElement, {
   onFrame: async () => {
     canvasElement.width = videoElement.getBoundingClientRect().width;
     canvasElement.height = videoElement.getBoundingClientRect().height;
     await holistic.send({ image: videoElement });
-  },
+  }
 });
+
+async function getConnectedDevices(type) {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  return devices.filter(device => device.kind === type)
+}
+
+function createCameraSelect(devices) {
+  const cameras = [{label: 'front', facingMode: 'user'}, {label: 'back', facingMode: 'environment'}];
+
+  cameras.map(camera => {
+    const {label, facingMode} = camera;
+    const option = document.createElement('option');
+    option.setAttribute('facingmode', facingMode);
+    option.textContent = label;
+    cameraSelect.appendChild(option);
+  })
+}
+
+async function openCamera(facingMode) {
+  const constraints = {
+    video: {
+      facingMode
+    }
+  }
+
+  return await navigator.mediaDevices.getUserMedia(constraints)
+}
+
+cameraSelect.addEventListener('change', async (e) => {
+  const option = e.target.options[e.target.selectedIndex];
+  const facingMode = option.getAttribute('facingmode')
+  const video = openCamera(facingMode)
+
+  await holistic.close();
+  video.then(stream => {
+    videoElement.srcObject = stream;
+
+    holistic = new Holistic({
+      locateFile: (file) => {
+          return `/node_modules/@mediapipe/holistic/${file}`;
+        },
+    });
+
+    holistic.setOptions({
+      selfieMode: true,
+      modelComplexity: 1,
+      smoothLandmarks: true,
+      enableSegmentation: false,
+      smoothSegmentation: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+    });
+
+    holistic.onResults(onResults);
+  })
+})
+
 
 navigator.mediaDevices.getUserMedia({video: true})
     .then(stream => {
-      camera.start();
+      getConnectedDevices('videoinput').then(cameras => {
+        createCameraSelect(cameras);
+
+        if(cameras && cameras.length > 0) {
+          const stream = openCamera(cameras[0].deviceId)
+
+          stream.then(stream => {
+            camera.start()
+          })
+        }
+      })
     })
     .catch(e => {
       console.error('비디오 스트림을 가져오는 동안 오류 발생: ', e)
